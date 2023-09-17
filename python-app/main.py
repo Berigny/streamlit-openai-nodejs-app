@@ -4,7 +4,7 @@ import openai
 import os
 from PyPDF2 import PdfFileReader
 from docx import Document
-from transformers import AutoTokenizer, PreTrainedTokenizerFast
+from transformers import AutoTokenizer, pipeline
 
 # Load the pre-trained tokenizer
 tokenizer = AutoTokenizer.from_pretrained("gpt2")
@@ -62,6 +62,9 @@ if uploaded_file:
 else:
     file_contents = ''
 
+# Initialize a question-answering pipeline
+qa_pipeline = pipeline("question-answering")
+
 # Define a maximum allowed number of tokens. Adjust as necessary.
 MAX_TOKENS = 4000  # Adjust this value based on the model's maximum token limit and your specific requirements
 
@@ -89,3 +92,13 @@ user_input = st.text_input("You: ", file_contents)
 
 if user_input:
     st.write(f'Assistant: {get_openai_response(user_input)}')
+
+# Get a question from the user
+user_question = st.text_input("Ask a question about the document:")
+
+if user_question and file_contents:
+    # Get an answer to the question based on the content of the uploaded file
+    answer = qa_pipeline(question=user_question, context=file_contents)
+    
+    # Display the answer
+    st.write(f'Answer: {answer["answer"]}')
