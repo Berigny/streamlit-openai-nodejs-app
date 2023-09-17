@@ -1,5 +1,5 @@
-openai
 streamlit
+openai
 PyPDF2
 python-docx
-tiktoken==1.0.0
+tiktoken
