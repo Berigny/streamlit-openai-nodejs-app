@@ -97,8 +97,18 @@ user_input = st.text_input("You: ", file_contents)
 if user_input:
     if file_contents:
         # If a file is uploaded, try to answer the question based on the file's content
-        answer = qa_pipeline(question=user_input, context=file_contents)
+        answer = qa_pipeline(question=user_input, context=file_contents, truncation=True)
         st.write(f'Answer: {answer["answer"]}')
     else:
         # If no file is uploaded, use the OpenAI API to respond to the chat message
         st.write(f'Assistant: {get_openai_response(user_input)}')
+
+# Get a question from the user
+user_question = st.text_input("Ask a question about the document:")
+
+if user_question and file_contents:
+    # Get an answer to the question based on the content of the uploaded file
+    answer = qa_pipeline(question=user_question, context=file_contents, truncation=True)
+    
+    # Display the answer
+    st.write(f'Answer: {answer["answer"]}')
