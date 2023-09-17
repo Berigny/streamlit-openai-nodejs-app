@@ -1,6 +1,9 @@
+from pathlib import Path
 import streamlit as st
 import openai
 import os
+from PyPDF2 import PdfFileReader
+from docx import Document
 
 # Set up OpenAI API key
 try:
@@ -13,20 +16,33 @@ except KeyError:
     
 st.title('OpenAI Chat')
 
-# Add a file uploader widget
-uploaded_file = st.file_uploader("Choose a file")
+uploaded_file = st.file_uploader("Choose a file", type=['txt', 'pdf', 'docx'])
 
 if uploaded_file:
-    # Read the contents of the uploaded file
-    try:
-        file_contents = uploaded_file.read().decode("utf-8")
-        user_input = st.text_input("You: ", file_contents)
-    except UnicodeDecodeError:
-        st.error("Could not decode file as UTF-8. Please upload a valid text file.")
-        user_input = st.text_input("You: ", "")
-else:
-    user_input = st.text_input("You: ", "")
+    file_extension = Path(uploaded_file.name).suffix
 
+    # Read the contents based on file type
+    try:
+        if file_extension == '.txt':
+            file_contents = uploaded_file.read().decode("utf-8")
+        elif file_extension == '.pdf':
+            pdf_reader = PdfFileReader(uploaded_file)
+            file_contents = ''
+            for page in range(pdf_reader.getNumPages()):
+                file_contents += pdf_reader.getPage(page).extract_text()
+        elif file_extension == '.docx':
+            doc = Document(uploaded_file)
+            file_contents = ' '.join([p.text for p in doc.paragraphs])
+        else:
+            st.error("Unsupported file type")
+            file_contents = ''
+    except Exception as e:
+        st.error(f"Could not read file: {e}")
+        file_contents = ''
+else:
+    file_contents = ''
+
+user_input = st.text_input("You: ", file_contents)
 
 # Function to communicate with OpenAI API
 def get_openai_response(message):
