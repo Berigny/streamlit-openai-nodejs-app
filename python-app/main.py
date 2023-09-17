@@ -4,6 +4,7 @@ import openai
 import os
 from PyPDF2 import PdfFileReader
 from docx import Document
+from tiktoken import Tokenizer  # Importing Tokenizer
 
 # Set up OpenAI API key
 try:
@@ -42,10 +43,19 @@ if uploaded_file:
 else:
     file_contents = ''
 
-user_input = st.text_input("You: ", file_contents)
+tokenizer = Tokenizer()
 
-# Function to communicate with OpenAI API
+# Define a maximum allowed number of tokens. Adjust as necessary.
+MAX_TOKENS = 4000  # Adjust this value based on the model's maximum token limit and your specific requirements
+
 def get_openai_response(message):
+    tokens = list(tokenizer.tokenize(message))
+    token_count = len(tokens)
+
+    if token_count > MAX_TOKENS:
+        return f"Input is too long ({token_count} tokens). Maximum allowed tokens is {MAX_TOKENS}."
+    
+    # your existing get_openai_response code
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -55,6 +65,8 @@ def get_openai_response(message):
     )
     message_content = response['choices'][0]['message']['content']
     return message_content
-    
+
+user_input = st.text_input("You: ", file_contents)
+
 if user_input:
     st.write(f'Assistant: {get_openai_response(user_input)}')
