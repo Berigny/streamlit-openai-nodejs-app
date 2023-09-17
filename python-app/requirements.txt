@@ -2,5 +2,5 @@ streamlit
 openai
 PyPDF2
 python-docx
-tokenizers
 transformers
+torch
