@@ -4,7 +4,14 @@ import openai
 import os
 from PyPDF2 import PdfFileReader
 from docx import Document
-from transformers import AutoTokenizer, pipeline
+from transformers import pipeline, AutoTokenizer
+import torch
+
+# Print the PyTorch version to the console
+print(torch.__version__)
+
+# Set up the QA pipeline with a specific model and tokenizer
+qa_pipeline = pipeline("question-answering", model="distilbert-base-cased-distilled-squad", tokenizer="distilbert-base-cased-distilled-squad")
 
 # Load the pre-trained tokenizer
 tokenizer = AutoTokenizer.from_pretrained("gpt2")
@@ -61,9 +68,6 @@ if uploaded_file:
         file_contents = ''
 else:
     file_contents = ''
-
-# Initialize a question-answering pipeline
-qa_pipeline = pipeline("question-answering")
 
 # Define a maximum allowed number of tokens. Adjust as necessary.
 MAX_TOKENS = 4000  # Adjust this value based on the model's maximum token limit and your specific requirements
