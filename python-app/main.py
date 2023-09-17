@@ -18,10 +18,15 @@ uploaded_file = st.file_uploader("Choose a file")
 
 if uploaded_file:
     # Read the contents of the uploaded file
-    file_contents = uploaded_file.read().decode("utf-8")
-    user_input = st.text_input("You: ", file_contents)
+    try:
+        file_contents = uploaded_file.read().decode("utf-8")
+        user_input = st.text_input("You: ", file_contents)
+    except UnicodeDecodeError:
+        st.error("Could not decode file as UTF-8. Please upload a valid text file.")
+        user_input = st.text_input("You: ", "")
 else:
     user_input = st.text_input("You: ", "")
+
 
 # Function to communicate with OpenAI API
 def get_openai_response(message):
