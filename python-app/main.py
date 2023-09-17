@@ -1,10 +1,13 @@
 from pathlib import Path
+from tokenizers import Tokenizer
 import streamlit as st
 import openai
 import os
 from PyPDF2 import PdfFileReader
 from docx import Document
-from tiktoken import Tokenizer  # Importing Tokenizer
+
+# Load the trained tokenizer
+tokenizer = Tokenizer.from_file("path/to/your/tokenizer.json")
 
 # Set up OpenAI API key
 try:
