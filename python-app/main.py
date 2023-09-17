@@ -12,7 +12,16 @@ except KeyError:
     exit(1)
     
 st.title('OpenAI Chat')
-user_input = st.text_input("You: ", "")
+
+# Add a file uploader widget
+uploaded_file = st.file_uploader("Choose a file")
+
+if uploaded_file:
+    # Read the contents of the uploaded file
+    file_contents = uploaded_file.read().decode("utf-8")
+    user_input = st.text_input("You: ", file_contents)
+else:
+    user_input = st.text_input("You: ", "")
 
 # Function to communicate with OpenAI API
 def get_openai_response(message):
