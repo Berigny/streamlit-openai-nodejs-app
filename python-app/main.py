@@ -4,43 +4,21 @@ import openai
 import os
 from PyPDF2 import PdfFileReader
 from docx import Document
-from transformers import pipeline, AutoTokenizer
+from transformers import pipeline
 import torch
 
 # Print the PyTorch version to the console
-print(torch.__version__)
+st.write(f'PyTorch version: {torch.__version__}')
 
 # Set up the QA pipeline with a specific model and tokenizer
 qa_pipeline = pipeline("question-answering", model="distilbert-base-cased-distilled-squad", tokenizer="distilbert-base-cased-distilled-squad")
-
-# Load the pre-trained tokenizer
-tokenizer = AutoTokenizer.from_pretrained("gpt2")
-
-# A simple dataset (for illustration purposes)
-dataset = [
-    "Hello world!", 
-    "OpenAI develops artificial general intelligence.", 
-    "Python is a popular programming language."
-]
-
-# Adding a text input for users to submit data for fine-tuning
-user_submission = st.text_input("Submit data for fine-tuning:")
-
-if user_submission:
-    dataset.append(user_submission)
-    # Fine-tune the tokenizer with the new submission
-    tokenizer.add_tokens(user_submission.split())
-    st.write("Thank you for your submission!")
 
 # Set up OpenAI API key
 try:
     openai.api_key = os.environ['OPENAI_API_KEY']
 except KeyError:
-    st.sidebar.write("""
-    You haven't set up your API key yet.
-    """)
-    exit(1)
-    
+    st.sidebar.write("You haven't set up your API key yet.")
+
 st.title('OpenAI Chat')
 
 uploaded_file = st.file_uploader("Choose a file", type=['txt', 'pdf', 'docx'])
@@ -73,15 +51,11 @@ else:
 MAX_TOKENS = 4000  # Adjust this value based on the model's maximum token limit and your specific requirements
 
 def get_openai_response(message):
-    # Here we change tokenizer.tokenize to tokenizer.encode
-    # because AutoTokenizer does not have a tokenize method
-    tokens = tokenizer.encode(message)
-    token_count = len(tokens)
-
-    if token_count > MAX_TOKENS:
-        return f"Input is too long ({token_count} tokens). Maximum allowed tokens is {MAX_TOKENS}."
+    # Check the number of tokens in the message
+    if len(message.split()) > MAX_TOKENS:
+        return f"Input is too long. Maximum allowed tokens is {MAX_TOKENS}."
     
-    # your existing get_openai_response code
+    # Get a response from the OpenAI API
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -92,23 +66,16 @@ def get_openai_response(message):
     message_content = response['choices'][0]['message']['content']
     return message_content
 
+# Input field for user to input their query or chat
 user_input = st.text_input("You: ", file_contents)
 
 if user_input:
-    if file_contents:
-        # If a file is uploaded, try to answer the question based on the file's content
-        answer = qa_pipeline(question=user_input, context=file_contents, max_length=512, truncation="only_second")
-        st.write(f'Answer: {answer["answer"]}')
+    if len(file_contents) > 0:
+        try:
+            answer = qa_pipeline(question=user_input, context=file_contents, max_length=512, truncation=True)
+            st.write(f'Answer: {answer["answer"]}')
+        except Exception as e:
+            st.write(f'An error occurred: {str(e)}')
     else:
         # If no file is uploaded, use the OpenAI API to respond to the chat message
         st.write(f'Assistant: {get_openai_response(user_input)}')
-
-# Get a question from the user
-user_question = st.text_input("Ask a question about the document:")
-
-if user_question and file_contents:
-    # Get an answer to the question based on the content of the uploaded file
-    answer = qa_pipeline(question=user_question, context=file_contents, truncation=True)
-    
-    # Display the answer
-    st.write(f'Answer: {answer["answer"]}')
