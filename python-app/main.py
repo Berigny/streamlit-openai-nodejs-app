@@ -1,13 +1,29 @@
 from pathlib import Path
-from tokenizers import Tokenizer
 import streamlit as st
 import openai
 import os
 from PyPDF2 import PdfFileReader
 from docx import Document
+from transformers import AutoTokenizer, PreTrainedTokenizerFast
 
-# Load the trained tokenizer
-tokenizer = Tokenizer.from_file("path/to/your/tokenizer.json")
+# Load the pre-trained tokenizer
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+
+# A simple dataset (for illustration purposes)
+dataset = [
+    "Hello world!", 
+    "OpenAI develops artificial general intelligence.", 
+    "Python is a popular programming language."
+]
+
+# Adding a text input for users to submit data for fine-tuning
+user_submission = st.text_input("Submit data for fine-tuning:")
+
+if user_submission:
+    dataset.append(user_submission)
+    # Fine-tune the tokenizer with the new submission
+    tokenizer.add_tokens(user_submission.split())
+    st.write("Thank you for your submission!")
 
 # Set up OpenAI API key
 try:
@@ -46,13 +62,13 @@ if uploaded_file:
 else:
     file_contents = ''
 
-tokenizer = Tokenizer()
-
 # Define a maximum allowed number of tokens. Adjust as necessary.
 MAX_TOKENS = 4000  # Adjust this value based on the model's maximum token limit and your specific requirements
 
 def get_openai_response(message):
-    tokens = list(tokenizer.tokenize(message))
+    # Here we change tokenizer.tokenize to tokenizer.encode
+    # because AutoTokenizer does not have a tokenize method
+    tokens = tokenizer.encode(message)
     token_count = len(tokens)
 
     if token_count > MAX_TOKENS:
