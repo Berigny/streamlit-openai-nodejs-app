@@ -20,7 +20,14 @@ except KeyError:
 # Function to connect to MongoDB
 def connect_to_mongodb():
     mongo_uri = st.secrets["MONGO_URI"]
-    mongo_client = MongoClient(mongo_uri)
+    mongo_user = st.secrets["MONGO_USER"]
+    mongo_pass = st.secrets["MONGO_PASS"]
+    
+    # Build the MongoDB URI
+    mongo_uri_with_auth = f"mongodb+srv://{mongo_user}:{mongo_pass}@{mongo_uri}/?retryWrites=true&w=majority"
+
+    # Connect to MongoDB
+    mongo_client = MongoClient(mongo_uri_with_auth)
     return mongo_client
 
 # Connect to MongoDB
@@ -85,7 +92,7 @@ def get_openai_response(message):
     message_content = response['choices'][0]['message']['content']
     return message_content
 
-# Input field for user to input their query or chat
+# Input field for the user to input their query or chat
 user_input = st.text_input("You: ", file_contents)
 
 if user_input:
