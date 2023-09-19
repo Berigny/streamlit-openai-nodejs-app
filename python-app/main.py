@@ -1,11 +1,37 @@
 from pathlib import Path
 import streamlit as st
 import openai
-import os
 from PyPDF2 import PdfFileReader
 from docx import Document
 from transformers import pipeline
 import torch
+from pymongo import MongoClient
+import os
+
+# Streamlit setup
+st.title('OpenAI Chat')
+
+# Load OpenAI API key from environment variables
+try:
+    openai.api_key = os.environ['OPENAI_API_KEY']
+except KeyError:
+    st.sidebar.write("You haven't set up your API key yet.")
+
+# Function to connect to MongoDB
+def connect_to_mongodb():
+    mongo_uri = st.secrets["MONGO_URI"]
+    mongo_client = MongoClient(mongo_uri)
+    return mongo_client
+
+# Connect to MongoDB
+mongo_client = connect_to_mongodb()
+
+# Database and collection setup
+database_name = "streamlit-openai-nodejs-app"  # Replace with your database name
+collection_name = "streamlit"  # Replace with your collection name
+
+db = mongo_client[database_name]
+collection = db[collection_name]
 
 # Print the PyTorch version to the console
 st.write(f'PyTorch version: {torch.__version__}')
@@ -13,14 +39,7 @@ st.write(f'PyTorch version: {torch.__version__}')
 # Set up the QA pipeline with a specific model and tokenizer
 qa_pipeline = pipeline("question-answering", model="distilbert-base-cased-distilled-squad", tokenizer="distilbert-base-cased-distilled-squad")
 
-# Set up OpenAI API key
-try:
-    openai.api_key = os.environ['OPENAI_API_KEY']
-except KeyError:
-    st.sidebar.write("You haven't set up your API key yet.")
-
-st.title('OpenAI Chat')
-
+# File upload logic...
 uploaded_file = st.file_uploader("Choose a file", type=['txt', 'pdf', 'docx'])
 
 if uploaded_file:
@@ -54,7 +73,7 @@ def get_openai_response(message):
     # Check the number of tokens in the message
     if len(message.split()) > MAX_TOKENS:
         return f"Input is too long. Maximum allowed tokens is {MAX_TOKENS}."
-    
+
     # Get a response from the OpenAI API
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
